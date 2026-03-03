@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Send to Discord</title>
+</head>
+<body>
+  <h2>Send Message</h2>
+  <textarea id="msg" rows="6" cols="40"></textarea><br><br>
+  <button onclick="send()">Send</button>
+
+  <script>
+    async function send() {
+      const text = document.getElementById("msg").value;
+
+      await fetch("/api/send-to-discord", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text })
+      });
+
+      alert("Sent!");
+    }
+  </script>
+</body>
+</html>
