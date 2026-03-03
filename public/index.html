@@ -1,149 +1,50 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Webhook Relay</title>
-<style>
-body{
-  margin:0;
-  overflow:hidden;
-  background:black;
-  font-family:monospace;
-  color:white;
-}
-canvas{
-  position:fixed;
-  top:0;
-  left:0;
-  z-index:0;
-}
-.container{
-  position:relative;
-  z-index:2;
-  height:100vh;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-}
-h1{
-  letter-spacing:4px;
-  margin-bottom:25px;
-}
-textarea{
-  width:500px;
-  height:180px;
-  background:#000;
-  border:1px solid white;
-  color:white;
-  padding:12px;
-  resize:none;
-  font-size:14px;
-  caret-color:white;
-}
-button{
-  margin-top:20px;
-  padding:12px 50px;
-  background:white;
-  border:none;
-  color:black;
-  font-weight:bold;
-  cursor:pointer;
-}
-</style>
-</head>
-<body>
-
-<canvas id="bg"></canvas>
-
-<div class="container">
-<h1>SEND TO DISCORD</h1>
-<textarea id="msg" maxlength="5000" placeholder="Type here..."></textarea>
-<button onclick="send()">SEND</button>
-</div>
-
 <script>
 const canvas = document.getElementById("bg");
 const ctx = canvas.getContext("2d");
+
 canvas.width = innerWidth;
 canvas.height = innerHeight;
 
-window.addEventListener("resize",()=>{
-  canvas.width=innerWidth;
-  canvas.height=innerHeight;
+window.addEventListener("resize", () => {
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
 });
 
-let time = 0;
+let t = 0;
 
-function noise(x,y){
-  return Math.sin(x*0.01 + time) + Math.cos(y*0.01 + time);
-}
+function draw() {
+  ctx.fillStyle = "black";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-function drawContours(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.strokeStyle="white";
-  ctx.lineWidth=1;
+  ctx.strokeStyle = "white";
+  ctx.lineWidth = 1;
 
-  for(let y=0;y<canvas.height;y+=8){
+  const spacing = 12;
+  const amplitude = 40;
+
+  for (let y = 0; y < canvas.height; y += spacing) {
     ctx.beginPath();
-    for(let x=0;x<canvas.width;x+=8){
-      let n = noise(x,y);
-      let offset = n*10;
-      ctx.lineTo(x, y + offset);
+
+    for (let x = 0; x < canvas.width; x += spacing) {
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+
+      const dx = x - cx;
+      const dy = y - cy;
+
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      const wave = Math.sin(dist * 0.02 - t) * amplitude;
+
+      ctx.lineTo(x, y + wave);
     }
+
     ctx.stroke();
   }
 
-  time += 0.01;
-  requestAnimationFrame(drawContours);
-}
-drawContours();
-
-function randomHash(){
-  const chars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let str="";
-  for(let i=0;i<20;i++){
-    str+=chars[Math.floor(Math.random()*chars.length)];
-  }
-  history.replaceState(null,null,"#"+str);
+  t += 0.03;
+  requestAnimationFrame(draw);
 }
 
-setInterval(randomHash, 5);
-
-let realValue="";
-const textarea=document.getElementById("msg");
-
-const typingSound=new Audio("https://actions.google.com/sounds/v1/keyboard/keyboard_click.ogg");
-typingSound.volume=0.2;
-
-textarea.addEventListener("input",()=>{
-  realValue=realValue+textarea.value.slice(realValue.length);
-  textarea.value="*".repeat(realValue.length);
-  typingSound.currentTime=0;
-  typingSound.play();
-});
-
-async function send(){
-  if(!realValue) return alert("Enter something first.");
-
-  const clickSound=new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
-  clickSound.play();
-
-  const res=await fetch("/api/send-to-discord",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({text:realValue})
-  });
-
-  if(res.ok){
-    alert("Sent.");
-    realValue="";
-    textarea.value="";
-  } else {
-    alert("Error sending.");
-  }
-}
+draw();
 </script>
-
-</body>
-</html>
