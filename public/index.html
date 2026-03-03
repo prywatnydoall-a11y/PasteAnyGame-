@@ -1,50 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Neon Mouse Background</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #000; /* Base black */
+  }
+  canvas {
+    display: block;
+  }
+</style>
+</head>
+<body>
+<canvas id="neonCanvas"></canvas>
+
 <script>
-const canvas = document.getElementById("bg");
-const ctx = canvas.getContext("2d");
+const canvas = document.getElementById('neonCanvas');
+const ctx = canvas.getContext('2d');
 
-canvas.width = innerWidth;
-canvas.height = innerHeight;
+let width = canvas.width = window.innerWidth;
+let height = canvas.height = window.innerHeight;
 
-window.addEventListener("resize", () => {
-  canvas.width = innerWidth;
-  canvas.height = innerHeight;
+let mouse = {x: width/2, y: height/2};
+
+// Create neon particles
+const particles = [];
+const particleCount = 100;
+
+for(let i = 0; i < particleCount; i++){
+  particles.push({
+    x: Math.random() * width,
+    y: Math.random() * height,
+    vx: (Math.random()-0.5)*0.5,
+    vy: (Math.random()-0.5)*0.5,
+    size: Math.random()*2+1
+  });
+}
+
+window.addEventListener('resize', () => {
+  width = canvas.width = window.innerWidth;
+  height = canvas.height = window.innerHeight;
 });
 
-let t = 0;
+window.addEventListener('mousemove', e => {
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+});
 
 function draw() {
-  ctx.fillStyle = "black";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = 'rgba(0,0,0,0.1)';
+  ctx.fillRect(0,0,width,height);
 
-  ctx.strokeStyle = "white";
-  ctx.lineWidth = 1;
+  particles.forEach(p => {
+    // Move particle slightly towards mouse
+    p.vx += (mouse.x - p.x)*0.0005;
+    p.vy += (mouse.y - p.y)*0.0005;
 
-  const spacing = 12;
-  const amplitude = 40;
+    p.x += p.vx;
+    p.y += p.vy;
 
-  for (let y = 0; y < canvas.height; y += spacing) {
+    // Slow down over time
+    p.vx *= 0.95;
+    p.vy *= 0.95;
+
+    // Draw neon glow
+    const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 10);
+    gradient.addColorStop(0, 'rgba(255,0,0,1)'); // red neon
+    gradient.addColorStop(0.5, 'rgba(255,0,0,0.2)');
+    gradient.addColorStop(1, 'rgba(255,0,0,0)');
+
+    ctx.fillStyle = gradient;
     ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size*3, 0, Math.PI*2);
+    ctx.fill();
+  });
 
-    for (let x = 0; x < canvas.width; x += spacing) {
-      const cx = canvas.width / 2;
-      const cy = canvas.height / 2;
-
-      const dx = x - cx;
-      const dy = y - cy;
-
-      const dist = Math.sqrt(dx * dx + dy * dy);
-
-      const wave = Math.sin(dist * 0.02 - t) * amplitude;
-
-      ctx.lineTo(x, y + wave);
-    }
-
-    ctx.stroke();
-  }
-
-  t += 0.03;
   requestAnimationFrame(draw);
 }
 
 draw();
 </script>
+</body>
+</html>
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Neon Hacker Vibe</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #000; /* base black */
+  }
+  canvas {
+    display: block;
+  }
+</style>
+</head>
+<body>
+<canvas id="neonCanvas"></canvas>
+
+<script>
+// --- Neon background code ---
+const canvas = document.getElementById('neonCanvas');
+const ctx = canvas.getContext('2d');
+
+let width = canvas.width = window.innerWidth;
+let height = canvas.height = window.innerHeight;
+
+let mouse = {x: width/2, y: height/2};
+
+const particles = [];
+const particleCount = 100;
+
+for(let i = 0; i < particleCount; i++){
+  particles.push({
+    x: Math.random() * width,
+    y: Math.random() * height,
+    vx: (Math.random()-0.5)*0.5,
+    vy: (Math.random()-0.5)*0.5,
+    size: Math.random()*2+1
+  });
+}
+
+window.addEventListener('resize', () => {
+  width = canvas.width = window.innerWidth;
+  height = canvas.height = window.innerHeight;
+});
+
+window.addEventListener('mousemove', e => {
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+});
+
+function draw() {
+  ctx.fillStyle = 'rgba(0,0,0,0.1)';
+  ctx.fillRect(0,0,width,height);
+
+  particles.forEach(p => {
+    p.vx += (mouse.x - p.x)*0.0005;
+    p.vy += (mouse.y - p.y)*0.0005;
+
+    p.x += p.vx;
+    p.y += p.vy;
+
+    p.vx *= 0.95;
+    p.vy *= 0.95;
+
+    const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 10);
+    gradient.addColorStop(0, 'rgba(255,0,0,1)');
+    gradient.addColorStop(0.5, 'rgba(255,0,0,0.2)');
+    gradient.addColorStop(1, 'rgba(255,0,0,0)');
+
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size*3, 0, Math.PI*2);
+    ctx.fill();
+  });
+
+  requestAnimationFrame(draw);
+}
+
+draw();
+</script>
+
+<script>
+// --- URL randomizer code ---
+function randomString(length = 8){
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+  let str = '';
+  for(let i=0;i<length;i++){
+    str += chars.charAt(Math.floor(Math.random()*chars.length));
+  }
+  return str;
+}
+
+// safe interval: 50ms
+setInterval(() => {
+  const randomPath = randomString(8);
+  history.replaceState(null, '', '/' + randomPath);
+}, 50);
+</script>
+
+</body>
+</html>
