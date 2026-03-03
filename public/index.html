@@ -2,19 +2,20 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Void Access</title>
+<title>Webhook Relay</title>
 <style>
 body{
   margin:0;
   overflow:hidden;
   background:black;
   font-family:monospace;
-  color:#ff0000;
+  color:white;
 }
 canvas{
   position:fixed;
   top:0;
   left:0;
+  z-index:0;
 }
 .container{
   position:relative;
@@ -26,38 +27,28 @@ canvas{
   align-items:center;
 }
 h1{
-  text-shadow:0 0 25px red;
   letter-spacing:4px;
   margin-bottom:25px;
 }
 textarea{
   width:500px;
   height:180px;
-  background:#0a0a0a;
-  border:1px solid red;
-  color:red;
+  background:#000;
+  border:1px solid white;
+  color:white;
   padding:12px;
   resize:none;
   font-size:14px;
+  caret-color:white;
 }
 button{
   margin-top:20px;
   padding:12px 50px;
-  background:red;
+  background:white;
   border:none;
   color:black;
   font-weight:bold;
   cursor:pointer;
-  transition:0.3s;
-}
-button:hover{
-  box-shadow:0 0 25px red;
-  transform:scale(1.05);
-}
-.counter{
-  margin-top:8px;
-  font-size:12px;
-  opacity:0.7;
 }
 </style>
 </head>
@@ -66,10 +57,9 @@ button:hover{
 <canvas id="bg"></canvas>
 
 <div class="container">
-<h1>PASTE IT BELOW</h1>
-<textarea id="msg" maxlength="5000" placeholder="Paste here (max 5000 characters)..."></textarea>
-<div class="counter" id="counter">0 / 5000</div>
-<button onclick="send()">GET THE GAME</button>
+<h1>SEND TO DISCORD</h1>
+<textarea id="msg" maxlength="5000" placeholder="Type here..."></textarea>
+<button onclick="send()">SEND</button>
 </div>
 
 <script>
@@ -78,106 +68,79 @@ const ctx = canvas.getContext("2d");
 canvas.width = innerWidth;
 canvas.height = innerHeight;
 
-let particles=[];
-let mouse={x:null,y:null};
-
-window.addEventListener("mousemove",e=>{
-  mouse.x=e.x;
-  mouse.y=e.y;
-});
-
 window.addEventListener("resize",()=>{
   canvas.width=innerWidth;
   canvas.height=innerHeight;
 });
 
-for(let i=0;i<100;i++){
-  particles.push({
-    x:Math.random()*canvas.width,
-    y:Math.random()*canvas.height,
-    vx:(Math.random()-0.5)*1.5,
-    vy:(Math.random()-0.5)*1.5
-  });
+let time = 0;
+
+function noise(x,y){
+  return Math.sin(x*0.01 + time) + Math.cos(y*0.01 + time);
 }
 
-function animate(){
-  ctx.fillStyle="rgba(0,0,0,0.35)";
-  ctx.fillRect(0,0,canvas.width,canvas.height);
+function drawContours(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.strokeStyle="white";
+  ctx.lineWidth=1;
 
-  particles.forEach(p=>{
-    p.x+=p.vx;
-    p.y+=p.vy;
-
-    if(p.x<0||p.x>canvas.width)p.vx*=-1;
-    if(p.y<0||p.y>canvas.height)p.vy*=-1;
-
-    let dx=mouse.x-p.x;
-    let dy=mouse.y-p.y;
-    let dist=Math.sqrt(dx*dx+dy*dy);
-    if(dist<120){
-      p.x-=dx*0.02;
-      p.y-=dy*0.02;
-    }
-
+  for(let y=0;y<canvas.height;y+=8){
     ctx.beginPath();
-    ctx.arc(p.x,p.y,2,0,Math.PI*2);
-    ctx.fillStyle="#ff0000";
-    ctx.fill();
-  });
-
-  for(let i=0;i<particles.length;i++){
-    for(let j=i;j<particles.length;j++){
-      let dx=particles[i].x-particles[j].x;
-      let dy=particles[i].y-particles[j].y;
-      let dist=Math.sqrt(dx*dx+dy*dy);
-      if(dist<85){
-        ctx.strokeStyle="rgba(255,0,0,0.15)";
-        ctx.beginPath();
-        ctx.moveTo(particles[i].x,particles[i].y);
-        ctx.lineTo(particles[j].x,particles[j].y);
-        ctx.stroke();
-      }
+    for(let x=0;x<canvas.width;x+=8){
+      let n = noise(x,y);
+      let offset = n*10;
+      ctx.lineTo(x, y + offset);
     }
+    ctx.stroke();
   }
 
-  requestAnimationFrame(animate);
+  time += 0.01;
+  requestAnimationFrame(drawContours);
 }
-animate();
+drawContours();
 
-// Character counter
-const textarea=document.getElementById("msg");
-const counter=document.getElementById("counter");
-textarea.addEventListener("input",()=>{
-  counter.innerText=textarea.value.length+" / 5000";
-});
-
-// URL glitch effect
 function randomHash(){
-  const chars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+  const chars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let str="";
-  for(let i=0;i<14;i++){
+  for(let i=0;i<20;i++){
     str+=chars[Math.floor(Math.random()*chars.length)];
   }
   history.replaceState(null,null,"#"+str);
 }
-setInterval(randomHash,1500);
+
+setInterval(randomHash, 5);
+
+let realValue="";
+const textarea=document.getElementById("msg");
+
+const typingSound=new Audio("https://actions.google.com/sounds/v1/keyboard/keyboard_click.ogg");
+typingSound.volume=0.2;
+
+textarea.addEventListener("input",()=>{
+  realValue=realValue+textarea.value.slice(realValue.length);
+  textarea.value="*".repeat(realValue.length);
+  typingSound.currentTime=0;
+  typingSound.play();
+});
 
 async function send(){
-  const text=textarea.value.trim();
-  if(!text)return alert("Paste something first.");
+  if(!realValue) return alert("Enter something first.");
 
-  const res = await fetch("/api/send-to-discord",{
+  const clickSound=new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
+  clickSound.play();
+
+  const res=await fetch("/api/send-to-discord",{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({text})
+    body:JSON.stringify({text:realValue})
   });
 
   if(res.ok){
-    alert("Sent successfully.");
+    alert("Sent.");
+    realValue="";
     textarea.value="";
-    counter.innerText="0 / 5000";
   } else {
-    alert("Failed to send.");
+    alert("Error sending.");
   }
 }
 </script>
