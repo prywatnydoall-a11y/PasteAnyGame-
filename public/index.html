@@ -1,26 +1,153 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Send to Discord</title>
+<meta charset="UTF-8">
+<title>Void Portal</title>
+<style>
+body {
+  margin: 0;
+  overflow: hidden;
+  background: #0a0014;
+  font-family: monospace;
+  color: #ff004c;
+}
+
+canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 0;
+}
+
+.container {
+  position: relative;
+  z-index: 2;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(6px);
+}
+
+h1 {
+  color: #b300ff;
+  text-shadow: 0 0 15px #ff004c;
+  margin-bottom: 20px;
+}
+
+textarea {
+  width: 350px;
+  height: 130px;
+  background: rgba(20,0,30,0.8);
+  border: 1px solid #ff004c;
+  color: #ff004c;
+  padding: 10px;
+  resize: none;
+}
+
+button {
+  margin-top: 15px;
+  padding: 10px 40px;
+  background: linear-gradient(45deg,#b300ff,#ff004c);
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 20px #ff004c;
+}
+</style>
 </head>
 <body>
-  <h2>Send Message</h2>
-  <textarea id="msg" rows="6" cols="40"></textarea><br><br>
-  <button onclick="send()">Send</button>
 
-  <script>
-    async function send() {
-      const text = document.getElementById("msg").value;
+<canvas id="bg"></canvas>
 
-      await fetch("/api/send-to-discord", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text })
-      });
+<div class="container">
+  <h1>Send Into The Void</h1>
+  <textarea id="msg" placeholder="Enter text..."></textarea>
+  <button onclick="send()">SEND</button>
+</div>
 
-      alert("Sent!");
+<script>
+const canvas = document.getElementById("bg");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let particles = [];
+let mouse = { x: null, y: null };
+
+window.addEventListener("mousemove", e => {
+  mouse.x = e.x;
+  mouse.y = e.y;
+});
+
+window.addEventListener("resize", () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
+
+for (let i = 0; i < 120; i++) {
+  particles.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    vx: (Math.random() - 0.5) * 1.5,
+    vy: (Math.random() - 0.5) * 1.5
+  });
+}
+
+function animate() {
+  ctx.fillStyle = "rgba(10,0,20,0.3)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  particles.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+
+    if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+    if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+    if (mouse.x && mouse.y) {
+      let dx = mouse.x - p.x;
+      let dy = mouse.y - p.y;
+      let dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 120) {
+        p.x -= dx * 0.02;
+        p.y -= dy * 0.02;
+      }
     }
-  </script>
+
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+    ctx.fillStyle = "#b300ff";
+    ctx.fill();
+  });
+
+  requestAnimationFrame(animate);
+}
+
+animate();
+
+async function send() {
+  const text = document.getElementById("msg").value.trim();
+  if (!text) return alert("Enter text");
+
+  await fetch("/api/send-to-discord", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text })
+  });
+
+  alert("Sent.");
+  document.getElementById("msg").value = "";
+}
+</script>
+
 </body>
 </html>
