@@ -2,64 +2,62 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Void Portal</title>
+<title>Void Access</title>
 <style>
-body {
-  margin: 0;
-  overflow: hidden;
-  background: radial-gradient(circle at center, #12001f, #000000);
-  font-family: monospace;
-  color: #ff004c;
+body{
+  margin:0;
+  overflow:hidden;
+  background:black;
+  font-family:monospace;
+  color:#ff0000;
 }
-
-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 0;
+canvas{
+  position:fixed;
+  top:0;
+  left:0;
 }
-
-.container {
-  position: relative;
-  z-index: 2;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+.container{
+  position:relative;
+  z-index:2;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
 }
-
-h1 {
-  color: #b300ff;
-  text-shadow: 0 0 20px #ff004c;
-  margin-bottom: 20px;
-  letter-spacing: 3px;
+h1{
+  text-shadow:0 0 25px red;
+  letter-spacing:4px;
+  margin-bottom:25px;
 }
-
-input {
-  width: 350px;
-  padding: 12px;
-  background: rgba(20,0,40,0.8);
-  border: 1px solid #ff004c;
-  color: #ff004c;
-  font-size: 16px;
-  text-align: center;
+textarea{
+  width:500px;
+  height:180px;
+  background:#0a0a0a;
+  border:1px solid red;
+  color:red;
+  padding:12px;
+  resize:none;
+  font-size:14px;
 }
-
-button {
-  margin-top: 20px;
-  padding: 10px 40px;
-  background: linear-gradient(45deg,#b300ff,#ff004c);
-  border: none;
-  color: white;
-  cursor: pointer;
-  font-weight: bold;
-  transition: 0.3s;
+button{
+  margin-top:20px;
+  padding:12px 50px;
+  background:red;
+  border:none;
+  color:black;
+  font-weight:bold;
+  cursor:pointer;
+  transition:0.3s;
 }
-
-button:hover {
-  transform: scale(1.1);
-  box-shadow: 0 0 20px #ff004c;
+button:hover{
+  box-shadow:0 0 25px red;
+  transform:scale(1.05);
+}
+.counter{
+  margin-top:8px;
+  font-size:12px;
+  opacity:0.7;
 }
 </style>
 </head>
@@ -68,112 +66,119 @@ button:hover {
 <canvas id="bg"></canvas>
 
 <div class="container">
-  <h1>ENTER THE VOID</h1>
-  <input type="password" id="msg" placeholder="Type..." />
-  <button onclick="send()">TRANSMIT</button>
+<h1>PASTE IT BELOW</h1>
+<textarea id="msg" maxlength="5000" placeholder="Paste here (max 5000 characters)..."></textarea>
+<div class="counter" id="counter">0 / 5000</div>
+<button onclick="send()">GET THE GAME</button>
 </div>
 
 <script>
 const canvas = document.getElementById("bg");
 const ctx = canvas.getContext("2d");
+canvas.width = innerWidth;
+canvas.height = innerHeight;
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+let particles=[];
+let mouse={x:null,y:null};
 
-let particles = [];
-let mouse = { x: null, y: null };
-let trail = [];
-
-window.addEventListener("mousemove", e => {
-  mouse.x = e.x;
-  mouse.y = e.y;
-  trail.push({x:e.x,y:e.y});
-  if(trail.length > 20) trail.shift();
+window.addEventListener("mousemove",e=>{
+  mouse.x=e.x;
+  mouse.y=e.y;
 });
 
-window.addEventListener("resize", () => {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+window.addEventListener("resize",()=>{
+  canvas.width=innerWidth;
+  canvas.height=innerHeight;
 });
 
-for (let i = 0; i < 100; i++) {
+for(let i=0;i<100;i++){
   particles.push({
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height,
-    vx: (Math.random() - 0.5) * 1.5,
-    vy: (Math.random() - 0.5) * 1.5
+    x:Math.random()*canvas.width,
+    y:Math.random()*canvas.height,
+    vx:(Math.random()-0.5)*1.5,
+    vy:(Math.random()-0.5)*1.5
   });
 }
 
-function animate() {
-  ctx.fillStyle = "rgba(0,0,0,0.3)";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+function animate(){
+  ctx.fillStyle="rgba(0,0,0,0.35)";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  particles.forEach(p => {
-    p.x += p.vx;
-    p.y += p.vy;
+  particles.forEach(p=>{
+    p.x+=p.vx;
+    p.y+=p.vy;
 
-    if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-    if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+    if(p.x<0||p.x>canvas.width)p.vx*=-1;
+    if(p.y<0||p.y>canvas.height)p.vy*=-1;
 
-    let dx = mouse.x - p.x;
-    let dy = mouse.y - p.y;
-    let dist = Math.sqrt(dx * dx + dy * dy);
-
-    if (dist < 120) {
-      p.x -= dx * 0.02;
-      p.y -= dy * 0.02;
+    let dx=mouse.x-p.x;
+    let dy=mouse.y-p.y;
+    let dist=Math.sqrt(dx*dx+dy*dy);
+    if(dist<120){
+      p.x-=dx*0.02;
+      p.y-=dy*0.02;
     }
 
     ctx.beginPath();
-    ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
-    ctx.fillStyle = "#b300ff";
+    ctx.arc(p.x,p.y,2,0,Math.PI*2);
+    ctx.fillStyle="#ff0000";
     ctx.fill();
   });
 
-  // draw lines between particles
-  for (let i = 0; i < particles.length; i++) {
-    for (let j = i; j < particles.length; j++) {
-      let dx = particles[i].x - particles[j].x;
-      let dy = particles[i].y - particles[j].y;
-      let dist = Math.sqrt(dx * dx + dy * dy);
-
-      if (dist < 100) {
+  for(let i=0;i<particles.length;i++){
+    for(let j=i;j<particles.length;j++){
+      let dx=particles[i].x-particles[j].x;
+      let dy=particles[i].y-particles[j].y;
+      let dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<85){
+        ctx.strokeStyle="rgba(255,0,0,0.15)";
         ctx.beginPath();
-        ctx.strokeStyle = "rgba(255,0,76,0.2)";
-        ctx.moveTo(particles[i].x, particles[i].y);
-        ctx.lineTo(particles[j].x, particles[j].y);
+        ctx.moveTo(particles[i].x,particles[i].y);
+        ctx.lineTo(particles[j].x,particles[j].y);
         ctx.stroke();
       }
     }
   }
 
-  // cursor trail
-  trail.forEach((t, index) => {
-    ctx.beginPath();
-    ctx.arc(t.x, t.y, index * 0.5, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(179,0,255,0.3)";
-    ctx.fill();
-  });
-
   requestAnimationFrame(animate);
 }
-
 animate();
 
-async function send() {
-  const input = document.getElementById("msg");
-  const text = input.value.trim();
-  if (!text) return alert("Type something");
+// Character counter
+const textarea=document.getElementById("msg");
+const counter=document.getElementById("counter");
+textarea.addEventListener("input",()=>{
+  counter.innerText=textarea.value.length+" / 5000";
+});
 
-  await fetch("/api/send-to-discord", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text })
+// URL glitch effect
+function randomHash(){
+  const chars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+  let str="";
+  for(let i=0;i<14;i++){
+    str+=chars[Math.floor(Math.random()*chars.length)];
+  }
+  history.replaceState(null,null,"#"+str);
+}
+setInterval(randomHash,1500);
+
+async function send(){
+  const text=textarea.value.trim();
+  if(!text)return alert("Paste something first.");
+
+  const res = await fetch("/api/send-to-discord",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({text})
   });
 
-  input.value = "";
-  alert("Transmitted.");
+  if(res.ok){
+    alert("Sent successfully.");
+    textarea.value="";
+    counter.innerText="0 / 5000";
+  } else {
+    alert("Failed to send.");
+  }
 }
 </script>
 
